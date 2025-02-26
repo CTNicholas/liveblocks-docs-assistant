@@ -35,7 +35,7 @@ async function main() {
     await octokit.pulls.listFiles({ owner, repo, pull_number })
   ).data.map((file: any) => file.filename);
 
-  const filePaths = pullRequestFiles.map((file: string) => `${file}`);
+  const filePaths = pullRequestFiles.map((file: string) => `/${file}`);
   console.log("Files to diff:", filePaths);
 
   if (filePaths.length === 0) {
