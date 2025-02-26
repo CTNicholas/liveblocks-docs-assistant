@@ -22,7 +22,7 @@ async function main() {
   });
 
   const eventPayload = JSON.parse(
-    process.env.GITHUB_EVENT_PATH
+    !process.env.GITHUB_EVENT_PATH
       ? fs.readFileSync(String(process.env.GITHUB_EVENT_PATH), "utf8")
       : EXAMPLE_PR()
   );
@@ -44,23 +44,23 @@ async function main() {
   // console.log(pullRequestFiles);
 
   // Fetch the content of each file
-  const fileContents = await Promise.all(
-    pullRequestFiles.map(async (file: any) => {
-      const response = await octokit.repos.getContent({
-        owner,
-        repo,
-        path: file.filename,
-        ref: `refs/pull/${pull_number}/head`, // Ensures we get the PR version
-      });
-
-      // Content is base64 encoded, so we decode it
-      const content = Buffer.from(response.data.content, "base64").toString(
-        "utf-8"
-      );
-
-      return { filename: file.filename, content };
-    })
-  );
+  // const fileContents = await Promise.all(
+  //   pullRequestFiles.map(async (file: any) => {
+  //     const response = await octokit.repos.getContent({
+  //       owner,
+  //       repo,
+  //       path: file.filename,
+  //       ref: `refs/pull/${pull_number}/head`, // Ensures we get the PR version
+  //     });
+  //
+  //     // Content is base64 encoded, so we decode it
+  //     const content = Buffer.from(response.data.content, "base64").toString(
+  //       "utf-8"
+  //     );
+  //
+  //     return { filename: file.filename, content };
+  //   })
+  // );
 
   // console.log(fileContents);
 
@@ -269,6 +269,15 @@ function setup() {
 // You need a real PR open to test this. Add its number and branch name
 function EXAMPLE_PR() {
   console.log("Using example PR");
+  //   return `{
+  //   "pull_request": {
+  //    "number": 1,
+  //    "head": {
+  //       "ref": "docs-assistant"
+  //     }
+  //   }
+  // }`;
+
   return `{ 
   "pull_request": {
    "number": 4,
