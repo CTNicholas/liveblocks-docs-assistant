@@ -101,6 +101,7 @@ async function main() {
   console.log("Starting AI");
   const improvedDiff = await getFileSuggestions(diff.stdout);
   // console.log(fixes);
+  console.log(improvedDiff);
   console.log("AI done");
 
   // Create an array of changes from the diff output based on patches
@@ -200,8 +201,9 @@ async function getFileSuggestions(diff: string) {
       content: `You are an expert at writing developer documentation. 
       It is your job to improve documentation, fixing typos, grammar, etc.
       
-      I will send you a git diff, and you must improve it, fixing any problems.
-      Return a fixed diff, and only that. Nothing else. No code fences either. 
+      I will send you a git diff, and you must merge the diff, then create a new diff, fixing any problems.
+      Let me reiterate, you must APPLY the changes, then create a NEW diff where you fix it.
+      Return the fixed diff, and only that. Nothing else. No code fences either. 
      
       ---
      
