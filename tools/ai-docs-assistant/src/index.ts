@@ -35,16 +35,25 @@ async function main() {
     await octokit.pulls.listFiles({ owner, repo, pull_number })
   ).data.map((file: any) => file.filename);
 
-  const filePaths = pullRequestFiles.map((file: string) => `/${file}`);
+  const filePaths = pullRequestFiles.map((file: string) => `../../${file}`);
   console.log("Files to diff:", filePaths);
 
   if (filePaths.length === 0) {
     throw new Error("❌ No changed files detected in PR.");
   }
 
+  console.log(`origin/${eventPayload.pull_request.head.ref}`);
+
   const diff = await getExecOutput(
     "git",
-    ["diff", "--unified=1", "--", ...filePaths],
+    [
+      "diff",
+      "origin/main",
+      `origin/${eventPayload.pull_request.head.ref}`,
+      "--unified=1",
+      "--",
+      ...filePaths,
+    ],
     { silent: false }
   );
 
@@ -99,7 +108,14 @@ function setup() {
 
 function EXAMPLE_PR() {
   console.log("Using example PR");
-  return `{ "pull_request": { "number": 2 } }`;
+  return `{ 
+  "pull_request": {
+   "number": 1,
+   "head": {
+      "ref": "docs-assistant"
+    }
+  }
+}`;
 
   return `{
   "action": "opened",
