@@ -2,9 +2,10 @@ name: GitHub Actions Demo
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on:
   pull_request:
-    paths:
-      - "**/*.md"
-      - "**/*.mdx"
+#    TODO add back later
+#    paths:
+#      - "**/*.md"
+#      - "**/*.mdx"
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
