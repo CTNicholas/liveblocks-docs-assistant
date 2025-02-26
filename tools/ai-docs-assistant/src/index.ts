@@ -2,20 +2,35 @@ import { openai } from "@ai-sdk/openai";
 import dotenv from "dotenv";
 import { CoreMessage, generateText } from "ai";
 
-dotenv.config({ path: ".env.local" });
+setup();
+main();
 
-const messages: CoreMessage[] = [];
+async function main() {
+  const messages: CoreMessage[] = [];
 
-console.log(
-  "✅ Secret Key Loaded:",
-  (process.env.OPENAI_SECRET_KEY as string).replace(/.(?=.{4})/g, "*")
-);
+  messages.push({
+    role: "system",
+    content: "Talk about lemons",
+  });
+  try {
+    const result = await generateText({
+      model: openai("gpt-4o"),
+      messages,
+    });
+    console.log("Result:", result.text);
+  } catch (err) {
+    console.log(err);
+  }
+}
 
-//
-// const result = generateText({
-//   model: openai('gpt-4o'),
-//   messages,
-// });
+function setup() {
+  dotenv.config({ path: ".env.local" });
+
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OpenAI API key is missing");
+  }
+}
+
 //
 // async function main() {
 //   while (true) {
