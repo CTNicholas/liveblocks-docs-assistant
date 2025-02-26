@@ -15,8 +15,8 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
 
-      - name: Fetch full git history
-        run: git fetch --prune --unshallow
+      #      - name: Fetch full git history
+      #        run: git fetch --prune --unshallow
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
