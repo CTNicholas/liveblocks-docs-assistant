@@ -5,7 +5,14 @@ import { Octokit } from "@octokit/action";
 import fs from "fs";
 import { getExecOutput } from "@actions/exec";
 import { debug, getInput } from "@actions/core";
-import parseGitDiff from "parse-git-diff";
+import parseGitDiff, {
+  AnyChunk,
+  ChangedFile,
+  Chunk,
+  ChunkRange,
+  CombinedChunk,
+} from "parse-git-diff";
+import { applyPatch } from "diff";
 
 setup();
 main();
@@ -76,7 +83,7 @@ async function main() {
       "diff",
       "origin/main",
       `origin/${eventPayload.pull_request.head.ref}`,
-      "--unified=1",
+      "--unified=10",
       "--",
       ...markdownFilePaths,
     ],
@@ -88,43 +95,152 @@ async function main() {
     return;
   }
 
-  // debug(`\nDiff output:\n ${diff.stdout}`);
-
-  // Create an array of changes from the diff output based on patches
-  const changedFiles = parseGitDiff(diff.stdout).files.filter(
-    (file) => file.type === "ChangedFile"
-  );
+  console.log(`\nDiff output:\n ${diff.stdout}`);
 
   // console.log("\nChanged files:\n", JSON.stringify(changedFiles, null, 2));
 
-  const fixes = await getFileSuggestions(fileContents[0], changedFiles[0]);
-  console.log("RESULT");
-  console.log(fixes);
-  console.log("DONE");
+  console.log("Starting AI");
+  const improvedDiff = await getFileSuggestions(diff.stdout);
+  // console.log(fixes);
+  console.log("AI done");
+
+  // Create an array of changes from the diff output based on patches
+  const parsedDiff = parseGitDiff(improvedDiff);
+
+  // Get changed files from parsedDiff (changed files have type 'ChangedFile')
+  const changedFiles = parsedDiff.files.filter(
+    (file) => file.type === "ChangedFile"
+  );
+
+  const generateSuggestionBody = (changes) => {
+    const suggestionBody = changes
+      .filter(({ type }) => type === "AddedLine" || type === "UnchangedLine")
+      .map(({ content }) => content)
+      .join("\n");
+    // Quadruple backticks allow for triple backticks in a fenced code block in the suggestion body
+    // https://docs.github.com/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks#fenced-code-blocks
+    return `\`\`\`\`suggestion\n${suggestionBody}\n\`\`\`\``;
+  };
+
+  function createSingleLineComment(path, fromFileRange, changes) {
+    return {
+      path,
+      line: fromFileRange.start,
+      body: generateSuggestionBody(changes),
+    };
+  }
+
+  function createMultiLineComment(path, fromFileRange, changes) {
+    return {
+      path,
+      start_line: fromFileRange.start,
+      // The last line of the chunk is the start line plus the number of lines in the chunk
+      // minus 1 to account for the start line being included in fromFileRange.lines
+      line: fromFileRange.start + fromFileRange.lines - 1,
+      start_side: "RIGHT",
+      side: "RIGHT",
+      body: generateSuggestionBody(changes),
+    };
+  }
+
+  // Fetch existing review comments
+  const existingComments = (
+    await octokit.pulls.listReviewComments({ owner, repo, pull_number })
+  ).data;
+
+  // Function to generate a unique key for a comment
+  const generateCommentKey = (comment) =>
+    `${comment.path}:${comment.line ?? ""}:${comment.start_line ?? ""}:${
+      comment.body
+    }`;
+
+  // Create a Set of existing comment keys for faster lookup
+  const existingCommentKeys = new Set(existingComments.map(generateCommentKey));
+
+  // Create an array of comments with suggested changes for each chunk of each changed file
+  const comments = changedFiles.flatMap(({ path, chunks }) =>
+    chunks.flatMap(({ fromFileRange, changes }) => {
+      debug(`Starting line: ${fromFileRange.start}`);
+      debug(`Number of lines: ${fromFileRange.lines}`);
+      debug(`Changes: ${JSON.stringify(changes)}`);
+
+      const comment =
+        fromFileRange.lines <= 1
+          ? createSingleLineComment(path, fromFileRange, changes)
+          : createMultiLineComment(path, fromFileRange, changes);
+
+      // Generate key for the new comment
+      const commentKey = generateCommentKey(comment);
+
+      // Check if the new comment already exists
+      if (existingCommentKeys.has(commentKey)) {
+        return [];
+      }
+
+      return [comment];
+    })
+  );
+
+  // Create a review with the suggested changes if there are any
+  if (comments.length > 0) {
+    await octokit.pulls.createReview({
+      owner,
+      repo,
+      pull_number,
+      event: getInput("event").toUpperCase(),
+      body: getInput("comment"),
+      comments,
+    });
+  }
 }
 
-async function getFileSuggestions(fileContent: any, fileDiff: any) {
+async function getFileSuggestions(diff: string) {
   const messages: CoreMessage[] = [
     {
       role: "system",
       content: `You are an expert at writing developer documentation. 
       It is your job to improve documentation, fixing typos, grammar, etc.
       
-      Here is a file that has been changed:
-      \`\`\`\`
-      ${JSON.stringify(fileContent)}
-      \`\`\`\`
+      I will send you a git diff, and you must improve it, fixing any problems.
+      Return a fixed diff, and only that. Nothing else. No code fences either. 
+     
+      ---
+     
+      Here is the diff:
       
-             
-      The specific diffs for the file are notated for you here:
-      \`\`\`\`
-      ${JSON.stringify(fileDiff)}
-      \`\`\`\`
+      ${diff}
+      `,
+    },
+  ];
+
+  try {
+    const result = await generateText({
+      model: openai("gpt-4o"),
+      messages,
+    });
+    return result.text;
+  } catch (err) {
+    console.log(err);
+    throw new Error("Problem with OpenAI call");
+  }
+}
+
+async function getFileSuggestions2(changedFiles: ChangedFile[]) {
+  const messages: CoreMessage[] = [
+    {
+      role: "system",
+      content: `You are an expert at writing developer documentation. 
+      It is your job to improve documentation, fixing typos, grammar, etc.
       
-      You must fix problems that are in any diffs, or are close to them. 
-      If something is important to change elsewhere in the file, such as a typo, you can change that too.
+      I will send you an array of changes made to a file, and you must improve these changes.
+      Return the exact same array, with your changes applied, and with NOTHING ELSE. 
+      Do not surround it with code fences.
+     
+      ---
+     
+      Here is the array of changes:
       
-      Return the newly fixed file.
+      ${JSON.stringify(changedFiles)}
       `,
     },
   ];
