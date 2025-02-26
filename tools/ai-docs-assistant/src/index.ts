@@ -64,7 +64,6 @@ async function main() {
       "--",
       ...filePaths,
     ],
-
     { silent: false }
   );
 
