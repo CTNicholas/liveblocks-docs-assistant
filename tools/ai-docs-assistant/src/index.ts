@@ -37,19 +37,42 @@ async function main() {
 
   console.log(pullRequestFiles);
 
-  await getExecOutput("git", ["fetch", "--prune", "--unshallow"]);
+  const filePaths = pullRequestFiles.map((file) => `./${file}`);
 
-  // Get the diff between the head branch and the base branch (limit to the files in the pull request)
-  let diff;
-  try {
-    diff = await getExecOutput(
-      "git",
-      ["diff", "--unified=1", "--", ...pullRequestFiles],
-      { silent: true }
-    );
-  } catch (err) {
-    console.log(err);
+  console.log("📂 Files to diff:", filePaths);
+  if (filePaths.length === 0) {
+    throw new Error("❌ No changed files detected in PR.");
   }
+
+  const baseCommit = await getExecOutput("git", ["rev-parse", "origin/main"]);
+  const headCommit = await getExecOutput("git", [
+    "rev-parse",
+    "origin/docs-assistant",
+  ]);
+
+  console.log(
+    `🔍 Comparing commits: ${baseCommit.stdout.trim()} → ${headCommit.stdout.trim()}`
+  );
+
+  const diff = await getExecOutput(
+    "git",
+    [
+      "diff",
+      "--find-renames",
+      "--ignore-space-change",
+      "origin/main",
+      "origin/docs-assistant",
+      "--unified=1",
+      "--",
+      ...filePaths,
+    ],
+    { silent: false }
+  );
+
+  console.log(
+    "🔍 Git Diff Output:",
+    diff.stdout || "❌ No differences detected."
+  );
 
   // const baseBranch = eventPayload.pull_request.base.ref;
   // const headBranch = eventPayload.pull_request.head.ref;
