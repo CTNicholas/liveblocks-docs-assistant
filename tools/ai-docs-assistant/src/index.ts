@@ -37,7 +37,7 @@ async function main() {
 
   console.log(pullRequestFiles);
 
-  const filePaths = pullRequestFiles.map((file) => `/${file}`);
+  const filePaths = pullRequestFiles.map((file) => `../../${file}`);
 
   console.log("📂 Files to diff:", filePaths);
   if (filePaths.length === 0) {
