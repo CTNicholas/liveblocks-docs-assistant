@@ -21,8 +21,12 @@ jobs:
           node-version: "22.x"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Install & run Node.js script
-        run: npm ci && npm run start
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./tools/ai-docs-assistant
+
+      - name: Run Node.js script
+        run: npm run start
         working-directory: ./tools/ai-docs-assistant
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
