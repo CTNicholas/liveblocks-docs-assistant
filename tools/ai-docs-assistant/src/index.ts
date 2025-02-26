@@ -21,11 +21,13 @@ async function main() {
     userAgent: "ai-docs-assistant",
   });
 
-  const eventPayload = JSON.parse(
-    process.env.GITHUB_EVENT_PATH
-      ? fs.readFileSync(String(process.env.GITHUB_EVENT_PATH), "utf8")
-      : EXAMPLE_PR()
-  );
+  // Only example PR for now
+  const eventPayload = JSON.parse(EXAMPLE_PR());
+  // const eventPayload = JSON.parse(
+  //   process.env.GITHUB_EVENT_PATH
+  //     ? fs.readFileSync(String(process.env.GITHUB_EVENT_PATH), "utf8")
+  //     : EXAMPLE_PR()
+  // );
 
   const [owner, repo] = String(process.env.GITHUB_REPOSITORY).split("/");
   console.log("\nRepo:", `${owner}/${repo}`);
