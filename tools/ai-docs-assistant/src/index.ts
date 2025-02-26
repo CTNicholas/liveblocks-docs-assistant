@@ -84,7 +84,7 @@ async function main() {
       "diff",
       "origin/main",
       `origin/${eventPayload.pull_request.head.ref}`,
-      "--unified=10",
+      "--unified=1",
       "--",
       ...markdownFilePaths,
     ],
