@@ -27,13 +27,39 @@ async function main() {
   const pull_number = Number(eventPayload.pull_request.number);
 
   // Get file paths, from repo root
-  const pullRequestFilePaths = (
+  const pullRequestFiles = (
     await octokit.pulls.listFiles({ owner, repo, pull_number })
-  ).data.map((file: any) => `../../${file.filename}`);
+  ).data.filter(
+    (file: any) =>
+      file.filename.toLowerCase().endsWith(".md") ||
+      file.filename.toLowerCase().endsWith(".mdx")
+  );
 
-  const markdownFilePaths = pullRequestFilePaths.filter(
-    (file: string) =>
-      file.toLowerCase().endsWith(".md") || file.toLowerCase().endsWith(".mdx")
+  console.log(pullRequestFiles);
+
+  // Fetch the content of each file
+  const fileContents = await Promise.all(
+    pullRequestFiles.map(async (file: any) => {
+      const response = await octokit.repos.getContent({
+        owner,
+        repo,
+        path: file.filename,
+        ref: `refs/pull/${pull_number}/head`, // Ensures we get the PR version
+      });
+
+      // Content is base64 encoded, so we decode it
+      const content = Buffer.from(response.data.content, "base64").toString(
+        "utf-8"
+      );
+
+      return { filename: file.filename, content };
+    })
+  );
+
+  console.log(fileContents);
+
+  const markdownFilePaths = pullRequestFiles.map(
+    (file: any) => `../../${file.filename}`
   );
 
   console.log("\nFiles to diff:", markdownFilePaths);
@@ -65,31 +91,52 @@ async function main() {
   debug(`\nDiff output:\n ${diff.stdout}`);
 
   // Create an array of changes from the diff output based on patches
-  const parsedDiff = parseGitDiff(diff.stdout);
-
-  console.log("Parsed diff:\n", JSON.stringify(parsedDiff, null, 2));
-
-  // Get changed files from parsedDiff (changed files have type 'ChangedFile')
-  const changedFiles = parsedDiff.files.filter(
+  const changedFiles = parseGitDiff(diff.stdout).files.filter(
     (file) => file.type === "ChangedFile"
   );
 
   console.log("\nChanged files:\n", JSON.stringify(changedFiles, null, 2));
 
-  const messages: CoreMessage[] = [];
-  messages.push({
-    role: "system",
-    content: "Talk about lemons",
-  });
+  const fixes = await getFileSuggestions(fileContents[0], changedFiles[0]);
+  console.log(fixes);
+}
+
+async function getFileSuggestions(fileContent: any, fileDiff: any) {
+  const messages: CoreMessage[] = [
+    {
+      role: "system",
+      content: `You are an expert at writing developer documentation. 
+      It is your job to improve documentation, fixing typos, grammar, etc.
+      
+      Here is a file that has been changed:
+      \`\`\`\`
+      ${fileContent}
+      \`\`\`\`
+      
+             
+      The specific diffs for the file are notated for you here:
+      \`\`\`\`
+      ${fileDiff}
+      \`\`\`\`
+      
+      You must fix problems that are in any diffs, or are close to them. 
+      If something is important to change elsewhere in the file, such as a typo, you can change that too.
+      
+      Return the newly fixed file.
+      `,
+    },
+  ];
 
   try {
-    // const result = await generateText({
-    //   model: openai("gpt-4o"),
-    //   messages,
-    // });
-    // console.log("Result:", result.text);
+    const result = await generateText({
+      model: openai("gpt-4o"),
+      messages,
+    });
+    console.log("Result:", result.text);
+    return result.text;
   } catch (err) {
     console.log(err);
+    throw new Error("Problem with OpenAI call");
   }
 }
 
