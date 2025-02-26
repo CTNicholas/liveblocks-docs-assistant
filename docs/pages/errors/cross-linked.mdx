@@ -12,18 +12,18 @@ meta:
 You’re using multiple `@liveblocks/*` packages in your application bundle, but
 they’re not all on the same version.
 
-For example: you’re using `@liveblocks/zustand` at 1.1.3, bt
+For example: you’re using `@liveblocks/zustand` at 1.1.3, but
 `@liveblocks/react` is on 1.1.4.
 
 ## How to find the culprit?
 
-To find out if your project is affected, you can un
+To find out if your project is affected, you can run
 
 ```bash
 npm ls | grep @liveblocks
 ```
 
-Please make sure that all of the versions listed there are n the same version.
+Please make sure that all of the versions listed there are on the same version.
 
 ## Possible ways to fix it
 
