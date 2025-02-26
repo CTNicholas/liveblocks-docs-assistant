@@ -21,7 +21,7 @@
   </a>
 </p>
 
-Trigger a thi sfsfng
+Trigger a thi sfsfngrtgry
 
 **[Liveblocks](https://liveblocks.io) provides customizable pre-built features
 for human and AI collaboration, used to make your product multiplayer, engaging,
