@@ -45,11 +45,13 @@ async function main() {
       ["diff", "--unified=1", "--", ...pullRequestFiles],
       { silent: true }
     );
-  } catch (err) {}
+  } catch (err) {
+    console.log(err);
+  }
 
-  const baseBranch = eventPayload.pull_request.base.ref;
-  const headBranch = eventPayload.pull_request.head.ref;
-  console.log(`🔍 Comparing ${baseBranch}...${headBranch}`);
+  // const baseBranch = eventPayload.pull_request.base.ref;
+  // const headBranch = eventPayload.pull_request.head.ref;
+  // console.log(`🔍 Comparing ${baseBranch}...${headBranch}`);
 
   console.log(diff);
 
@@ -93,10 +95,12 @@ function setup() {
 
 function EXAMPLE_PR() {
   console.log("Using example PR");
+  return `{ "pull_request": { "number": 2 } }`;
+
   return `{
   "action": "opened",
   "pull_request": {
-    "number": 1,
+    "number": 2,
     "title": "Docs assistant",
     "user": {
       "login": "CTNicholas"
