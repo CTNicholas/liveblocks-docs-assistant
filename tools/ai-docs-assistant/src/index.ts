@@ -2,7 +2,7 @@ import { openai } from "@ai-sdk/openai";
 import dotenv from "dotenv";
 import { CoreMessage, generateText } from "ai";
 
-dotenv.config();
+dotenv.config({ path: ".env.local" });
 
 const messages: CoreMessage[] = [];
 

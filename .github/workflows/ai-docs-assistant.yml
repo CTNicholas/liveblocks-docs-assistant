@@ -1,5 +1,5 @@
 name: GitHub Actions Demo
-run-name: 🤖ChrisBot
+run-name: 🤖 ChrisBot
 on:
   pull_request:
 #    TODO add back later
@@ -30,8 +30,6 @@ jobs:
         working-directory: ./tools/ai-docs-assistant
         env:
           OPENAI_SECRET_KEY: ${{ secrets.OPENAI_SECRET_KEY }}
-
-
 #jobs:
 #  Explore-GitHub-Actions:
 #    runs-on: ubuntu-latest
