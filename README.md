@@ -21,8 +21,7 @@
   </a>
 </p>
 
-Trigger a thi sfsfngrtgry
-
+Trigger a thi sfsfngrtgryffhfh
 **[Liveblocks](https://liveblocks.io) provides customizable pre-built features
 for human and AI collaboration, used to make your product multiplayer, engaging,
 and AI‑ready. All without derailing your roadmap.**
