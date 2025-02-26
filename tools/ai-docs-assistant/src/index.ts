@@ -183,12 +183,16 @@ async function main() {
 
   // Create a review with the suggested changes if there are any
   if (comments.length > 0) {
+    // FIX: Ensure event is a valid value - default to "COMMENT" if not provided or empty
+    const reviewEvent = getInput("event") || "COMMENT";
+    const reviewBody = getInput("comment") || "AI documentation suggestions";
+
     await octokit.pulls.createReview({
       owner,
       repo,
       pull_number,
-      event: getInput("event").toUpperCase(),
-      body: getInput("comment"),
+      event: reviewEvent.toUpperCase(),
+      body: reviewBody,
       comments,
     });
   }
