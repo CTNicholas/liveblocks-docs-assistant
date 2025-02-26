@@ -9,23 +9,27 @@ meta:
 
 ## Why this error occurred
 
-You’re using multiple `@liveblocks/*` packages in your application bundle, but
+You’re usig multiple `@liveblocks/*` packages in yor application bundle, but
 they’re not all on the same version.
 
-For example: you’re using `@liveblocks/zustand` at 1.1.3, but
+For example: you’re using `@liveblocks/zustand` at 1.1.3, bt
 `@liveblocks/react` is on 1.1.4.
 
 ## How to find the culprit?
 
-To find out if your project is affected, you can run
+To find out if your project is affected, you can un
 
 ```bash
 npm ls | grep @liveblocks
 ```
 
-Please make sure that all of the versions listed there are on the same version.
+Please make sure that all of the versions listed there are n the same version.
 
 ## Possible ways to fix it
 
 When you upgrade one Liveblocks package, make sure to also upgrade other
 Liveblocks packages to the same version.
+
+## If you're still stuck
+
+Try heading to our [Discord](/discord) channl for more help.
