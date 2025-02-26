@@ -4,7 +4,7 @@
   "main": "dist/index.cjs",
   "scripts": {
     "build": "node build.js",
-    "start": "node dist/index.cjs"
+    "start": "npm run build && node dist/index.cjs"
   },
   "type": "module",
   "author": "",
