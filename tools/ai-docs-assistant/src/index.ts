@@ -84,7 +84,7 @@ async function main() {
       "diff",
       "origin/main",
       `origin/${eventPayload.pull_request.head.ref}`,
-      "--unified=1",
+      "--unified=0",
       "--",
       ...markdownFilePaths,
     ],
@@ -96,14 +96,14 @@ async function main() {
     return;
   }
 
-  console.log(`\nDiff output:\n ${diff.stdout}`);
+  // console.log(`\nDiff output:\n ${diff.stdout}`);
 
   // console.log("\nChanged files:\n", JSON.stringify(changedFiles, null, 2));
 
   console.log("Starting AI");
   const improvedDiff = await getFileSuggestions(diff.stdout);
   // console.log(fixes);
-  console.log(improvedDiff);
+  // console.log(improvedDiff);
   console.log("AI done");
 
   // Create an array of changes from the diff output based on patches
@@ -183,6 +183,8 @@ async function main() {
     })
   );
 
+  console.log(comments);
+
   // Create a review with the suggested changes if there are any
   if (comments.length > 0) {
     // FIX: Ensure event is a valid value - default to "COMMENT" if not provided or empty
@@ -206,6 +208,9 @@ async function getFileSuggestions(diff: string) {
       role: "system",
       content: `You are an expert at writing developer documentation. 
       It is your job to improve documentation, fixing typos, grammar, etc.
+      
+      Style guide:
+      - Replace straight apostrophes with curly ones (e.g. ' → ’)
       
       I will send you a git diff, and you must merge the diff, then create a new diff, fixing any problems.
       Let me reiterate, you must APPLY the changes, then create a NEW diff where you fix it.
