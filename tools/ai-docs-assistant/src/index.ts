@@ -17,18 +17,15 @@ async function main() {
     userAgent: "ai-docs-assistant",
   });
 
-  console.log(
-    "envs",
-    process.env.GITHUB_REPOSITORY,
-    process.env.GITHUB_EVENT_PATH,
-    process.env.GITHUB_TOKEN
-  );
-
   const eventPayload = JSON.parse(
-    fs.readFileSync(String(process.env.GITHUB_EVENT_PATH), "utf8")
+    process.env.GITHUB_EVENT_PATH
+      ? fs.readFileSync(String(process.env.GITHUB_EVENT_PATH), "utf8")
+      : EXAMPLE_PR()
   );
 
   const [owner, repo] = String(process.env.GITHUB_REPOSITORY).split("/");
+
+  console.log(owner, repo);
 
   const pull_number = Number(eventPayload.pull_request.number);
 
@@ -36,17 +33,30 @@ async function main() {
     await octokit.pulls.listFiles({ owner, repo, pull_number })
   ).data.map((file: any) => file.filename);
 
+  console.log(pullRequestFiles);
+
   // Get the diff between the head branch and the base branch (limit to the files in the pull request)
-  const diff = await getExecOutput(
-    "git",
-    ["diff", "--unified=1", "--", ...pullRequestFiles],
-    { silent: true }
-  );
+  let diff;
+  try {
+    diff = await getExecOutput(
+      "git",
+      ["diff", "--unified=1", "--", ...pullRequestFiles],
+      { silent: true }
+    );
+  } catch (err) {}
+
+  const baseBranch = eventPayload.pull_request.base.ref;
+  const headBranch = eventPayload.pull_request.head.ref;
+  console.log(`🔍 Comparing ${baseBranch}...${headBranch}`);
+
+  console.log(diff);
 
   debug(`Diff output: ${diff.stdout}`);
 
   // Create an array of changes from the diff output based on patches
   const parsedDiff = parseGitDiff(diff.stdout);
+
+  console.log(parsedDiff);
 
   // Get changed files from parsedDiff (changed files have type 'ChangedFile')
   const changedFiles = parsedDiff.files.filter(
@@ -77,6 +87,27 @@ function setup() {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OpenAI API key is missing");
   }
+}
+
+function EXAMPLE_PR() {
+  return `{
+  "action": "opened",
+  "pull_request": {
+    "number": 1,
+    "title": "Fix bug in API",
+    "user": {
+      "login": "octocat"
+    },
+    "body": "This PR fixes a critical bug.",
+    "head": {
+      "ref": "docs-assistant"
+    },
+    "base": {
+      "ref": "main"
+    }
+  }
+}
+`;
 }
 
 //
