@@ -58,14 +58,13 @@ async function main() {
     "git",
     [
       "diff",
-      "--find-renames",
-      "--ignore-space-change",
       "origin/main",
       "origin/docs-assistant",
       "--unified=1",
       "--",
-      ...filePaths,
+      ...pullRequestFiles,
     ],
+
     { silent: false }
   );
 
