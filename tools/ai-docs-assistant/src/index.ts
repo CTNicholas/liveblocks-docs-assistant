@@ -62,19 +62,19 @@ async function main() {
     return;
   }
 
-  debug(`\nDiff output: ${diff.stdout}`);
+  debug(`\nDiff output:\n ${diff.stdout}`);
 
   // Create an array of changes from the diff output based on patches
   const parsedDiff = parseGitDiff(diff.stdout);
 
-  console.log("parsedDiff", JSON.stringify(parsedDiff));
+  console.log("Parsed diff:\n", JSON.stringify(parsedDiff, null, 2));
 
   // Get changed files from parsedDiff (changed files have type 'ChangedFile')
   const changedFiles = parsedDiff.files.filter(
     (file) => file.type === "ChangedFile"
   );
 
-  console.log("\nChanged files", JSON.stringify(changedFiles));
+  console.log("\nChanged files:\n", JSON.stringify(changedFiles, null, 2));
 
   const messages: CoreMessage[] = [];
   messages.push({
@@ -101,6 +101,7 @@ function setup() {
   }
 }
 
+// You need a real PR open to test this. Add its number and branch name
 function EXAMPLE_PR() {
   console.log("Using example PR");
   return `{ 
@@ -111,25 +112,6 @@ function EXAMPLE_PR() {
     }
   }
 }`;
-
-  return `{
-  "action": "opened",
-  "pull_request": {
-    "number": 2,
-    "title": "Docs assistant",
-    "user": {
-      "login": "CTNicholas"
-    },
-    "body": "",
-    "head": {
-      "ref": "docs-assistant"
-    },
-    "base": {
-      "ref": "main"
-    }
-  }
-}
-`;
 }
 
 //
