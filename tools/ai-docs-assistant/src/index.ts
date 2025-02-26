@@ -11,8 +11,6 @@ setup();
 main();
 
 async function main() {
-  const messages: CoreMessage[] = [];
-
   const octokit = new Octokit({
     userAgent: "ai-docs-assistant",
   });
@@ -23,33 +21,29 @@ async function main() {
       : EXAMPLE_PR()
   );
 
-  // console.log(eventPayload);
-
   const [owner, repo] = String(process.env.GITHUB_REPOSITORY).split("/");
-
-  console.log(owner, repo);
+  console.log("\nRepo:", `${owner}/${repo}`);
 
   const pull_number = Number(eventPayload.pull_request.number);
 
-  const pullRequestFiles = (
+  // Get file paths, from repo root
+  const pullRequestFilePaths = (
     await octokit.pulls.listFiles({ owner, repo, pull_number })
-  ).data.map((file: any) => file.filename);
+  ).data.map((file: any) => `../../${file.filename}`);
 
-  // Get only MDX files, relative from repo root
-  const filePaths = pullRequestFiles
-    .filter(
-      (file: string) =>
-        file.toLowerCase().endsWith(".md") ||
-        file.toLowerCase().endsWith(".mdx")
-    )
-    .map((file: string) => `../../${file}`);
+  const markdownFilePaths = pullRequestFilePaths.filter(
+    (file: string) =>
+      file.toLowerCase().endsWith(".md") || file.toLowerCase().endsWith(".mdx")
+  );
 
-  console.log("Files to diff:", filePaths);
+  console.log("\nFiles to diff:", markdownFilePaths);
 
-  if (filePaths.length === 0) {
-    throw new Error("❌ No changed files detected in PR.");
+  if (markdownFilePaths.length === 0) {
+    console.log("No changed .md/.mdx files");
+    return;
   }
 
+  // Get diff
   const diff = await getExecOutput(
     "git",
     [
@@ -58,30 +52,31 @@ async function main() {
       `origin/${eventPayload.pull_request.head.ref}`,
       "--unified=1",
       "--",
-      ...filePaths,
+      ...markdownFilePaths,
     ],
     { silent: false }
   );
 
   if (!diff.stdout) {
-    console.log("No differences");
+    console.log("No differences in .md/.mdx files");
     return;
   }
 
-  debug(`Diff output: ${diff.stdout}`);
+  debug(`\nDiff output: ${diff.stdout}`);
 
   // Create an array of changes from the diff output based on patches
   const parsedDiff = parseGitDiff(diff.stdout);
 
-  console.log(parsedDiff);
+  console.log("parsedDiff", JSON.stringify(parsedDiff));
 
   // Get changed files from parsedDiff (changed files have type 'ChangedFile')
   const changedFiles = parsedDiff.files.filter(
     (file) => file.type === "ChangedFile"
   );
 
-  console.log(changedFiles);
+  console.log("\nChanged files", JSON.stringify(changedFiles));
 
+  const messages: CoreMessage[] = [];
   messages.push({
     role: "system",
     content: "Talk about lemons",
