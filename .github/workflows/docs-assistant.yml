@@ -22,7 +22,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Run Node.js script
-        run: node /.github/script/ai-docs-review.js
+        run: node ./.github/scripts/ai-docs-review.js
 
 
 
