@@ -35,14 +35,20 @@ async function main() {
     await octokit.pulls.listFiles({ owner, repo, pull_number })
   ).data.map((file: any) => file.filename);
 
-  const filePaths = pullRequestFiles.map((file: string) => `../../${file}`);
+  // Get only MDX files, relative from repo root
+  const filePaths = pullRequestFiles
+    .filter(
+      (file: string) =>
+        file.toLowerCase().endsWith(".md") ||
+        file.toLowerCase().endsWith(".mdx")
+    )
+    .map((file: string) => `../../${file}`);
+
   console.log("Files to diff:", filePaths);
 
   if (filePaths.length === 0) {
     throw new Error("❌ No changed files detected in PR.");
   }
-
-  console.log(`origin/${eventPayload.pull_request.head.ref}`);
 
   const diff = await getExecOutput(
     "git",
@@ -57,16 +63,10 @@ async function main() {
     { silent: false }
   );
 
-  console.log(
-    "🔍 Git Diff Output:",
-    diff.stdout || "❌ No differences detected."
-  );
-
-  // const baseBranch = eventPayload.pull_request.base.ref;
-  // const headBranch = eventPayload.pull_request.head.ref;
-  // console.log(`🔍 Comparing ${baseBranch}...${headBranch}`);
-
-  console.log(diff);
+  if (!diff.stdout) {
+    console.log("No differences");
+    return;
+  }
 
   debug(`Diff output: ${diff.stdout}`);
 
