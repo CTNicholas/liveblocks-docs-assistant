@@ -20,7 +20,8 @@ async function main() {
   console.log(
     "envs",
     process.env.GITHUB_REPOSITORY,
-    process.env.GITHUB_EVENT_PATH
+    process.env.GITHUB_EVENT_PATH,
+    process.env.GITHUB_TOKEN
   );
 
   const eventPayload = JSON.parse(
