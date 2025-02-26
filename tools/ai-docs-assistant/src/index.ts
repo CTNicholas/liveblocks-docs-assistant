@@ -62,7 +62,7 @@ async function main() {
       "origin/docs-assistant",
       "--unified=1",
       "--",
-      ...pullRequestFiles,
+      ...filePaths,
     ],
 
     { silent: false }
