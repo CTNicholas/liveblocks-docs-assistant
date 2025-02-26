@@ -42,16 +42,6 @@ async function main() {
     throw new Error("❌ No changed files detected in PR.");
   }
 
-  const baseCommit = await getExecOutput("git", ["rev-parse", "origin/main"]);
-  const headCommit = await getExecOutput("git", [
-    "rev-parse",
-    "origin/docs-assistant",
-  ]);
-
-  console.log(
-    `🔍 Comparing commits: ${baseCommit.stdout.trim()} → ${headCommit.stdout.trim()}`
-  );
-
   const diff = await getExecOutput(
     "git",
     ["diff", "--unified=1", "--", ...filePaths],
