@@ -25,7 +25,8 @@ declare global {
 ```
 
 In the example above, the problem is in the `Date` field, because a `Date` isn’t
-a valid JSON value.
+a valid JSON value. How ever, what is also problem is wen the JSON date is older
+than from 1970, then will go wrong.
 
 ## How to fix it
 
