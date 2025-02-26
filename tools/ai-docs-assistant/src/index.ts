@@ -35,7 +35,7 @@ async function main() {
       file.filename.toLowerCase().endsWith(".mdx")
   );
 
-  console.log(pullRequestFiles);
+  // console.log(pullRequestFiles);
 
   // Fetch the content of each file
   const fileContents = await Promise.all(
@@ -56,13 +56,13 @@ async function main() {
     })
   );
 
-  console.log(fileContents);
+  // console.log(fileContents);
 
   const markdownFilePaths = pullRequestFiles.map(
     (file: any) => `../../${file.filename}`
   );
 
-  console.log("\nFiles to diff:", markdownFilePaths);
+  // console.log("\nFiles to diff:", markdownFilePaths);
 
   if (markdownFilePaths.length === 0) {
     console.log("No changed .md/.mdx files");
@@ -80,7 +80,7 @@ async function main() {
       "--",
       ...markdownFilePaths,
     ],
-    { silent: false }
+    { silent: true }
   );
 
   if (!diff.stdout) {
@@ -88,17 +88,19 @@ async function main() {
     return;
   }
 
-  debug(`\nDiff output:\n ${diff.stdout}`);
+  // debug(`\nDiff output:\n ${diff.stdout}`);
 
   // Create an array of changes from the diff output based on patches
   const changedFiles = parseGitDiff(diff.stdout).files.filter(
     (file) => file.type === "ChangedFile"
   );
 
-  console.log("\nChanged files:\n", JSON.stringify(changedFiles, null, 2));
+  // console.log("\nChanged files:\n", JSON.stringify(changedFiles, null, 2));
 
   const fixes = await getFileSuggestions(fileContents[0], changedFiles[0]);
+  console.log("RESULT");
   console.log(fixes);
+  console.log("DONE");
 }
 
 async function getFileSuggestions(fileContent: any, fileDiff: any) {
@@ -110,13 +112,13 @@ async function getFileSuggestions(fileContent: any, fileDiff: any) {
       
       Here is a file that has been changed:
       \`\`\`\`
-      ${fileContent}
+      ${JSON.stringify(fileContent)}
       \`\`\`\`
       
              
       The specific diffs for the file are notated for you here:
       \`\`\`\`
-      ${fileDiff}
+      ${JSON.stringify(fileDiff)}
       \`\`\`\`
       
       You must fix problems that are in any diffs, or are close to them. 
@@ -132,7 +134,6 @@ async function getFileSuggestions(fileContent: any, fileDiff: any) {
       model: openai("gpt-4o"),
       messages,
     });
-    console.log("Result:", result.text);
     return result.text;
   } catch (err) {
     console.log(err);
@@ -153,9 +154,9 @@ function EXAMPLE_PR() {
   console.log("Using example PR");
   return `{ 
   "pull_request": {
-   "number": 1,
+   "number": 4,
    "head": {
-      "ref": "docs-assistant"
+      "ref": "small-changes"
     }
   }
 }`;
