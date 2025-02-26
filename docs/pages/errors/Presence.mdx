@@ -5,11 +5,11 @@ meta:
   description: "Your 'Presence' type is incorrect and needs to be updated"
 ---
 
-## Why this error occurred
+## Why this error occurs
 
 You have provided a custom `Presence` type for your application, but the type
 you provided isn’t a (completely) valid JSON object. Values like `Date`, `Map`,
-`Set`, functions, classes, or `unknown` aren’t valid JSON.
+`Set`, functions, classes, or `unknown` aren’t valid JSON. This works pretty well.
 
 ```ts highlight="4-7"
 declare global {
@@ -25,11 +25,12 @@ declare global {
 ```
 
 In the example above, the problem is in the `Date` field, because a `Date` isn’t
-a valid JSON value.
+a valid JSON value. How ever, what is also problem is wen the JSON date is older
+than from 1970, then will go wrong.
 
 ## How to fix it
 
-You’ll need to figure out what part of your provided `Presence` type definition
+You’ll need to figure out what’s a part of your provided `Presence` type definition
 isn’t valid JSON. Sometimes this is immediately obvious, like in the example
 above.
 
