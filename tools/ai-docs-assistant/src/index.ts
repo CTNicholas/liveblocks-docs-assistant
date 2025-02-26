@@ -23,6 +23,8 @@ async function main() {
       : EXAMPLE_PR()
   );
 
+  console.log(eventPayload);
+
   const [owner, repo] = String(process.env.GITHUB_REPOSITORY).split("/");
 
   console.log(owner, repo);
@@ -90,15 +92,16 @@ function setup() {
 }
 
 function EXAMPLE_PR() {
+  console.log("Using example PR");
   return `{
   "action": "opened",
   "pull_request": {
     "number": 1,
-    "title": "Fix bug in API",
+    "title": "Docs assistant",
     "user": {
-      "login": "octocat"
+      "login": "CTNicholas"
     },
-    "body": "This PR fixes a critical bug.",
+    "body": "",
     "head": {
       "ref": "docs-assistant"
     },
