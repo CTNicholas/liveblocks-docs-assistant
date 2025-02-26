@@ -22,7 +22,7 @@ async function main() {
   });
 
   const eventPayload = JSON.parse(
-    !process.env.GITHUB_EVENT_PATH
+    process.env.GITHUB_EVENT_PATH
       ? fs.readFileSync(String(process.env.GITHUB_EVENT_PATH), "utf8")
       : EXAMPLE_PR()
   );
