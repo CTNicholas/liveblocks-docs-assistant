@@ -23,7 +23,7 @@ async function main() {
       : EXAMPLE_PR()
   );
 
-  console.log(eventPayload);
+  // console.log(eventPayload);
 
   const [owner, repo] = String(process.env.GITHUB_REPOSITORY).split("/");
 
@@ -36,6 +36,8 @@ async function main() {
   ).data.map((file: any) => file.filename);
 
   console.log(pullRequestFiles);
+
+  await getExecOutput("git", ["fetch", "--prune", "--unshallow"]);
 
   // Get the diff between the head branch and the base branch (limit to the files in the pull request)
   let diff;
