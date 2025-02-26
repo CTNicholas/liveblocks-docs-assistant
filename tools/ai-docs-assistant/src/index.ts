@@ -12,7 +12,6 @@ import parseGitDiff, {
   ChunkRange,
   CombinedChunk,
 } from "parse-git-diff";
-import { applyPatch } from "diff";
 
 setup();
 main();
